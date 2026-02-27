@@ -1,12 +1,13 @@
 package com.blog_yonetim_sistemi.backend.service;
 
-import com.blog_yonetim_sistemi.backend.entity.Tag;
+import com.blog_yonetim_sistemi.backend.dto.request.TagRequest;
+import com.blog_yonetim_sistemi.backend.dto.response.TagResponse;
 
 import java.util.List;
 
 public interface TagService {
 
-    Tag createTag(Tag tag);
+    TagResponse createTag(TagRequest request);
 
-    List<Tag> getAllTags();
+    List<TagResponse> getAllTags();
 }

@@ -1,12 +1,13 @@
 package com.blog_yonetim_sistemi.backend.service;
 
-import com.blog_yonetim_sistemi.backend.entity.User;
+import com.blog_yonetim_sistemi.backend.dto.request.UserRequest;
+import com.blog_yonetim_sistemi.backend.dto.response.UserResponse;
 
 import java.util.List;
 
 public interface UserService {
 
-    User register(User user);
+    UserResponse register(UserRequest request);
 
-    List<User> getAllUsers();
+    List<UserResponse> getAllUsers();
 }

@@ -1,6 +1,9 @@
 package com.blog_yonetim_sistemi.backend.service.impl;
 
+import com.blog_yonetim_sistemi.backend.dto.request.UserRequest;
+import com.blog_yonetim_sistemi.backend.dto.response.UserResponse;
 import com.blog_yonetim_sistemi.backend.entity.User;
+import com.blog_yonetim_sistemi.backend.mapper.UserMapper;
 import com.blog_yonetim_sistemi.backend.repository.UserRepository;
 import com.blog_yonetim_sistemi.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -14,26 +17,34 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public User register(User user) {
+    public UserResponse register(UserRequest request) {
 
-        if (userRepository.existsByUsername(user.getUsername())) {
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username zaten mevcut");
         }
 
-        if (userRepository.existsByEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email zaten mevcut");
         }
 
+        User user = userMapper.toEntity(request);
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        return userMapper.toResponse(savedUser);
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponse> getAllUsers() {
+
+        List<User> users = userRepository.findAll();
+
+        return userMapper.toResponseList(users);
     }
 }

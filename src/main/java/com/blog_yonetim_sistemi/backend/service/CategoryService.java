@@ -1,12 +1,13 @@
 package com.blog_yonetim_sistemi.backend.service;
 
-import com.blog_yonetim_sistemi.backend.entity.Category;
+import com.blog_yonetim_sistemi.backend.dto.request.CategoryRequest;
+import com.blog_yonetim_sistemi.backend.dto.response.CategoryResponse;
 
 import java.util.List;
 
 public interface CategoryService {
 
-    Category createCategory(Category category);
+    CategoryResponse createCategory(CategoryRequest request);
 
-    List<Category> getAllCategories();
+    List<CategoryResponse> getAllCategories();
 }
