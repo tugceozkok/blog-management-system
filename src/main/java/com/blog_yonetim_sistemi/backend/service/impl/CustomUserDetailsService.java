@@ -1,4 +1,4 @@
-package com.blog_yonetim_sistemi.backend.security;
+package com.blog_yonetim_sistemi.backend.service.impl;
 
 import com.blog_yonetim_sistemi.backend.entity.User;
 import com.blog_yonetim_sistemi.backend.repository.UserRepository;
