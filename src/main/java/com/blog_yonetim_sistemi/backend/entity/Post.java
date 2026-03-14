@@ -1,16 +1,25 @@
 package com.blog_yonetim_sistemi.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "posts")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Post {
 
     @Id
@@ -33,22 +42,33 @@ public class Post {
     @Column(nullable = false)
     private boolean active = true;
 
-    // Many Posts → One User
-    @ManyToOne
+    // Many Posts → One User (Yazar)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
     // Many Posts → One Category
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    // Many Posts ↔ Many Tags
+    // Many Posts ↔ Many Tags (List yerine Set kullanıldı)
     @ManyToMany
     @JoinTable(
             name = "post_tags",
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private List<Tag> tags;
+    private Set<Tag> tags = new HashSet<>();
+
+    // One Post → Many Comments
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    // Çift yönlü ilişki (Post üzerinden bu postu kimlerin beğendiğini/kaydettiğini bulmak için)
+    @ManyToMany(mappedBy = "savedPosts")
+    private Set<User> savedByUsers = new HashSet<>();
+
+    @ManyToMany(mappedBy = "likedPosts")
+    private Set<User> likedByUsers = new HashSet<>();
 }

@@ -1,29 +1,60 @@
 package com.blog_yonetim_sistemi.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Data // Getter, Setter, toString gibi metotları otomatik oluşturur
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; //
+    private Long id;
 
     @Column(unique = true, nullable = false)
-    private String username; //
+    private String username;
+
+    @Column(unique = true, nullable = false)
+    private String email;
 
     @Column(nullable = false)
-    private String email; // [cite: 19]
+    private String password;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String password; // [cite: 20] (Hashlenmiş saklanacak)
+    private Role role = Role.ROLE_USER; // Varsayılan olarak herkes User'dır
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime createdDate; //
+    private LocalDateTime createdDate;
+
+    // Kullanıcının daha sonra okumak için kaydettiği postlar
+    @ManyToMany
+    @JoinTable(
+            name = "user_saved_posts",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id")
+    )
+    private Set<Post> savedPosts = new HashSet<>();
+
+    // Kullanıcının beğendiği postlar
+    @ManyToMany
+    @JoinTable(
+            name = "user_liked_posts",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id")
+    )
+    private Set<Post> likedPosts = new HashSet<>();
 }
