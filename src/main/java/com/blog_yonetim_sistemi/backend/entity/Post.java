@@ -39,8 +39,14 @@ public class Post {
     @UpdateTimestamp
     private LocalDateTime updatedDate;
 
+    // Soft Delete (Zorunlu Gereksinim)
     @Column(nullable = false)
     private boolean active = true;
+
+    // Editör onay mekanizması için (DRAFT, PENDING, PUBLISHED)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PostStatus status = PostStatus.DRAFT;
 
     // Many Posts → One User (Yazar)
     @ManyToOne(fetch = FetchType.LAZY)
