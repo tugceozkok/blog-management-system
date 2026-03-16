@@ -1,5 +1,6 @@
 package com.blog_yonetim_sistemi.backend.repository;
 
+import com.blog_yonetim_sistemi.backend.entity.Role;
 import com.blog_yonetim_sistemi.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,4 +13,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    // Sistemde belirli bir rolde (Örn: ADMIN) kullanıcı var mı diye kontrol etmek için
+    boolean existsByRole(Role role);
 }
