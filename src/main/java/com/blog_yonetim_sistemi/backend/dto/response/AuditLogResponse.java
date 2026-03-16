@@ -4,11 +4,11 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class UserResponse {
+public class AuditLogResponse {
 
     private Long id;
     private String username;
-    private String email;
-    private String role; // Kullanıcının rolü
-    private LocalDateTime createdDate;
+    private String action;
+    private String detail;
+    private LocalDateTime timestamp;
 }

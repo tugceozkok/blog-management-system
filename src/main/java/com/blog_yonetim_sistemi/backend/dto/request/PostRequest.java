@@ -20,4 +20,7 @@ public class PostRequest {
 
     @NotNull
     private List<Long> tagIds;
+
+    // Yazar yazıyı oluştururken DRAFT veya PENDING olarak seçebilsin
+    private String status;
 }
