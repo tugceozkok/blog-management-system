@@ -29,6 +29,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Optional<Post> findByIdAndAuthorIdAndActiveTrue(Long id, Long authorId);
 
+    // GÜNCELLEME VE SİLME İŞLEMLERİ İÇİN (Eksik olan ve hataya sebep olan metot)
+    Optional<Post> findByIdAndActiveTrue(Long id);
+
     // ========================================================================
 
     // 3. EDİTÖR VE ADMİN PANELİ İÇİN (Taslakları GİZLE)

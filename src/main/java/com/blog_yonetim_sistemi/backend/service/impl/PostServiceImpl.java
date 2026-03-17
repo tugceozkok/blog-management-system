@@ -3,17 +3,18 @@ package com.blog_yonetim_sistemi.backend.service.impl;
 import com.blog_yonetim_sistemi.backend.dto.request.PostRequest;
 import com.blog_yonetim_sistemi.backend.dto.response.PostResponse;
 import com.blog_yonetim_sistemi.backend.entity.Post;
-import com.blog_yonetim_sistemi.backend.entity.User; // Eksik olabilir
+import com.blog_yonetim_sistemi.backend.entity.PostStatus;
+import com.blog_yonetim_sistemi.backend.entity.User;
 import com.blog_yonetim_sistemi.backend.mapper.PostMapper;
-import com.blog_yonetim_sistemi.backend.repository.*; // Tüm repolar için
+import com.blog_yonetim_sistemi.backend.repository.*;
 import com.blog_yonetim_sistemi.backend.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest; // KRİTİK: PageRequest için şart
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Veri güvenliği için
 
-import java.util.List;
+import java.util.HashSet;
+
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
@@ -30,10 +31,6 @@ public class PostServiceImpl implements PostService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
-        if (postRepository.existsByTitleAndActiveTrue(request.getTitle())) {
-            throw new RuntimeException("Bu başlıkta aktif post zaten var");
-        }
-
         if (request.getTagIds() == null || request.getTagIds().isEmpty()) {
             throw new RuntimeException("Post en az 1 tag içermelidir");
         }
@@ -44,14 +41,18 @@ public class PostServiceImpl implements PostService {
         post.setAuthor(user);
         post.setActive(true);
 
-        post.setCategory(
-                categoryRepository.findById(request.getCategoryId())
-                        .orElseThrow(() -> new RuntimeException("Kategori bulunamadı"))
-        );
+        // Gelen isteğe göre statüyü belirliyoruz (React'tan butonla gelecek)
+        if (request.getStatus() != null && request.getStatus().equalsIgnoreCase("PENDING")) {
+            post.setStatus(PostStatus.PENDING);
+        } else {
+            post.setStatus(PostStatus.DRAFT);
+        }
 
-        post.setTags(
-                tagRepository.findAllById(request.getTagIds())
-        );
+        post.setCategory(categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Kategori bulunamadı")));
+
+        // List olan tag'leri Set'e çeviriyoruz
+        post.setTags(new HashSet<>(tagRepository.findAllById(request.getTagIds())));
 
         return postMapper.toResponse(postRepository.save(post));
     }
@@ -62,21 +63,30 @@ public class PostServiceImpl implements PostService {
         Post existingPost = postRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
 
-        if (!existingPost.getAuthor().getUsername().equals(username)) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+
+        // Yetki Kontrolü: Yazar, Editör veya Admin mi?
+        boolean isAuthor = existingPost.getAuthor().getUsername().equals(username);
+        boolean isEditor = user.getRole().name().equals("ROLE_EDITOR");
+        boolean isAdmin = user.getRole().name().equals("ROLE_ADMIN");
+
+        if (!isAuthor && !isEditor && !isAdmin) {
             throw new RuntimeException("Bu postu güncelleme yetkiniz yok");
         }
 
         existingPost.setTitle(request.getTitle());
         existingPost.setContent(request.getContent());
 
-        existingPost.setCategory(
-                categoryRepository.findById(request.getCategoryId())
-                        .orElseThrow(() -> new RuntimeException("Kategori bulunamadı"))
-        );
+        // Eğer Editör onay verip statüyü PUBLISHED yapıyorsa bunu da güncelliyoruz
+        if (request.getStatus() != null) {
+            existingPost.setStatus(PostStatus.valueOf(request.getStatus().toUpperCase()));
+        }
 
-        existingPost.setTags(
-                tagRepository.findAllById(request.getTagIds())
-        );
+        existingPost.setCategory(categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Kategori bulunamadı")));
+
+        existingPost.setTags(new HashSet<>(tagRepository.findAllById(request.getTagIds())));
 
         return postMapper.toResponse(postRepository.save(existingPost));
     }
@@ -87,44 +97,53 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
 
-        if (!post.getAuthor().getUsername().equals(username)) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+
+        // Yetki Kontrolü: Yazar, Editör veya Admin mi?
+        boolean isAuthor = post.getAuthor().getUsername().equals(username);
+        boolean isEditor = user.getRole().name().equals("ROLE_EDITOR");
+        boolean isAdmin = user.getRole().name().equals("ROLE_ADMIN");
+
+        if (!isAuthor && !isEditor && !isAdmin) {
             throw new RuntimeException("Bu postu silme yetkiniz yok");
         }
 
-        post.setActive(false);
+        post.setActive(false); // Soft Delete (Veritabanından silmez, gizler)
         postRepository.save(post);
     }
 
     @Override
     public PostResponse getPostById(Long id) {
+        // Ziyaretçiler için sadece Yayında (PUBLISHED) olanları getirir
         return postMapper.toResponse(
-                postRepository.findByIdAndActiveTrue(id)
-                        .orElseThrow(() -> new RuntimeException("Post bulunamadı"))
+                postRepository.findByIdAndActiveTrueAndStatus(id, PostStatus.PUBLISHED)
+                        .orElseThrow(() -> new RuntimeException("Post bulunamadı veya yayında değil"))
         );
     }
 
     @Override
     public Page<PostResponse> getAllActivePosts(int page, int size) {
-        return postRepository.findByActiveTrue(PageRequest.of(page, size))
+        // Ana sayfa akışı: Sadece PUBLISHED (Yayında) olanlar
+        return postRepository.findByActiveTrueAndStatus(PostStatus.PUBLISHED, PageRequest.of(page, size))
                 .map(postMapper::toResponse);
     }
 
     @Override
     public Page<PostResponse> getPostsByCategory(Long categoryId, int page, int size) {
-        return postRepository.findByCategoryIdAndActiveTrue(categoryId, PageRequest.of(page, size))
+        return postRepository.findByCategoryIdAndActiveTrueAndStatus(categoryId, PostStatus.PUBLISHED, PageRequest.of(page, size))
                 .map(postMapper::toResponse);
     }
 
     @Override
     public Page<PostResponse> getPostsByTag(Long tagId, int page, int size) {
-        return postRepository.findByTagsIdAndActiveTrue(tagId, PageRequest.of(page, size))
+        return postRepository.findByTagsIdAndActiveTrueAndStatus(tagId, PostStatus.PUBLISHED, PageRequest.of(page, size))
                 .map(postMapper::toResponse);
     }
 
     @Override
     public Page<PostResponse> searchByTitle(String title, int page, int size) {
-        return postRepository
-                .findByTitleContainingIgnoreCaseAndActiveTrue(title, PageRequest.of(page, size))
+        return postRepository.findByTitleContainingIgnoreCaseAndActiveTrueAndStatus(title, PostStatus.PUBLISHED, PageRequest.of(page, size))
                 .map(postMapper::toResponse);
     }
 }

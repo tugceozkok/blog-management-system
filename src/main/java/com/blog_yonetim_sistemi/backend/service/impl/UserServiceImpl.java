@@ -2,6 +2,7 @@ package com.blog_yonetim_sistemi.backend.service.impl;
 
 import com.blog_yonetim_sistemi.backend.dto.request.UserRequest;
 import com.blog_yonetim_sistemi.backend.dto.response.UserResponse;
+import com.blog_yonetim_sistemi.backend.entity.Role;
 import com.blog_yonetim_sistemi.backend.entity.User;
 import com.blog_yonetim_sistemi.backend.mapper.UserMapper;
 import com.blog_yonetim_sistemi.backend.repository.UserRepository;
@@ -32,8 +33,10 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userMapper.toEntity(request);
-
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // YENİ: Kayıt olan herkese standart kullanıcı rolü veriyoruz
+        user.setRole(Role.ROLE_USER);
 
         User savedUser = userRepository.save(user);
 
@@ -42,9 +45,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> getAllUsers() {
-
         List<User> users = userRepository.findAll();
-
         return userMapper.toResponseList(users);
     }
 }

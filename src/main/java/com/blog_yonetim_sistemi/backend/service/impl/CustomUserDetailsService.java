@@ -16,17 +16,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
 
-        // Database'den kullanıcıyı bul
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("Kullanıcı bulunamadı"));
 
-        // Spring Security'nin anlayacağı User nesnesine çevir
+        // ROLÜ VERİTABANINDAN DİNAMİK ALIYORUZ
         return org.springframework.security.core.userdetails.User
                 .builder()
                 .username(user.getUsername())
-                .password(user.getPassword()) // encoded password
-                .authorities("USER") // şimdilik sabit rol
+                .password(user.getPassword())
+                .authorities(user.getRole().name()) // ROLE_USER, ROLE_ADMIN vb.
                 .build();
     }
 }
