@@ -39,26 +39,24 @@ public class Post {
     @UpdateTimestamp
     private LocalDateTime updatedDate;
 
-    // Soft Delete (Zorunlu Gereksinim)
     @Column(nullable = false)
     private boolean active = true;
 
-    // Editör onay mekanizması için (DRAFT, PENDING, PUBLISHED)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PostStatus status = PostStatus.DRAFT;
 
-    // Many Posts → One User (Yazar)
+    @Column(nullable = false)
+    private int likeCount = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    // Many Posts → One Category
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    // Many Posts ↔ Many Tags (List yerine Set kullanıldı)
     @ManyToMany
     @JoinTable(
             name = "post_tags",
@@ -67,7 +65,6 @@ public class Post {
     )
     private Set<Tag> tags = new HashSet<>();
 
-    // One Post → Many Comments
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 

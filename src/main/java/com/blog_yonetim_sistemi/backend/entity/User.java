@@ -34,13 +34,13 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.ROLE_USER; // Varsayılan olarak herkes User'dır
+    private Role role = Role.ROLE_USER;
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdDate;
 
-    // Kullanıcının daha sonra okumak için kaydettiği postlar
+    // Kullanıcının daha sonra okumak için kaydettiği postlar (İlişkinin sahibi User)
     @ManyToMany
     @JoinTable(
             name = "user_saved_posts",
@@ -49,7 +49,7 @@ public class User {
     )
     private Set<Post> savedPosts = new HashSet<>();
 
-    // Kullanıcının beğendiği postlar
+    // Kullanıcının beğendiği postlar (İlişkinin sahibi User)
     @ManyToMany
     @JoinTable(
             name = "user_liked_posts",

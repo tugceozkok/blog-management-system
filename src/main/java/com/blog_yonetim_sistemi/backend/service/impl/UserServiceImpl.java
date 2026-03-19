@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // YENİ: Kayıt olan herkese standart kullanıcı rolü veriyoruz
+        // Kayıt olan herkese standart kullanıcı rolü veriyoruz
         user.setRole(Role.ROLE_USER);
 
         User savedUser = userRepository.save(user);
@@ -47,5 +47,17 @@ public class UserServiceImpl implements UserService {
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
         return userMapper.toResponseList(users);
+    }
+
+    // YENİ: Rol güncelleme operasyonu
+    @Override
+    public UserResponse updateUserRole(Long id, Role newRole) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
+
+        user.setRole(newRole);
+
+        User savedUser = userRepository.save(user);
+        return userMapper.toResponse(savedUser);
     }
 }
