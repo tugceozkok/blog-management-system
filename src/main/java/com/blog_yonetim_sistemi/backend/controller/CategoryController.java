@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*") // CORS hatasını önlemek için eklendi
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
@@ -18,22 +19,16 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    // Kategori oluşturma
     @PostMapping
     public ResponseEntity<CategoryResponse> createCategory(
             @Valid @RequestBody CategoryRequest request) {
-
         CategoryResponse response = categoryService.createCategory(request);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // Tüm kategorileri listeleme
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
-
         List<CategoryResponse> categories = categoryService.getAllCategories();
-
         return ResponseEntity.ok(categories);
     }
 }

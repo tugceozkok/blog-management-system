@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*") // CORS hatasını önlemek için eklendi
 @RestController
 @RequestMapping("/api/tags")
 @RequiredArgsConstructor
@@ -18,22 +19,16 @@ public class TagController {
 
     private final TagService tagService;
 
-    // Tag oluşturma
     @PostMapping
     public ResponseEntity<TagResponse> createTag(
             @Valid @RequestBody TagRequest request) {
-
         TagResponse response = tagService.createTag(request);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // Tüm tag'leri listeleme
     @GetMapping
     public ResponseEntity<List<TagResponse>> getAllTags() {
-
         List<TagResponse> tags = tagService.getAllTags();
-
         return ResponseEntity.ok(tags);
     }
 }

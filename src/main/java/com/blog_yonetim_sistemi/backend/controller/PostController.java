@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*") // CORS hatasını önlemek için eklendi
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
@@ -80,8 +81,6 @@ public class PostController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(postService.searchByTitle(title, page, size));
     }
-
-    // --- YENİ EKLENEN BEĞENİ VE KAYDETME ENDPOINTLERİ ---
 
     @PostMapping("/{id}/like")
     public ResponseEntity<String> toggleLike(@PathVariable Long id, Authentication authentication) {
